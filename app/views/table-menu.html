@@ -1,0 +1,5 @@
+<h2>Tables</h2>
+<a class="panel six columns"
+	ng-repeat="atable in tables"
+ 	ng-click="selectTable(atable)"
+ 	ng-class="{active: currentTable == atable.table}">{{ atable.table }}</a>

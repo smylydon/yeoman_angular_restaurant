@@ -1,0 +1,8 @@
+<ul id="menu" ng-model="foods">
+  <li ng-repeat="food in foods">
+    <a ng-click="addFood(food)">
+      <img ng-src="{{food.image_url}}">
+      <p>{{food.name}}</p>
+    </a>
+  </li>
+</ul>

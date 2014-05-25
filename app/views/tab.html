@@ -1,0 +1,4 @@
+<ul id="customer-tab">
+	<li ng-repeat="tabitem in table.table.tabs.tabitems"><h3>{{tabitem.foods.name}} <span>{{tabitem.cents/100|currency}}</span></h3></li>
+	<li id="total"><h3>Total <span>{{table.table.total/100 | currency}}</span></h3></li>
+</ul>
