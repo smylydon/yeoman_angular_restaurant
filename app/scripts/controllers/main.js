@@ -8,17 +8,18 @@ app.controller('MainCtrl', ['$scope','$http','$location',function ($scope,$http,
     $scope.tables = [];
     $scope.foods = [];
     $scope.currentTable = 0;
+    var server = 'http://localhost:3000/restaurant';
 
     $scope.selectTable = function (table) {
     	$scope.currentTable = table.table;
     	$location.path('/tables/' + table._id);
     };
 
-    $http.get('http://localhost:3000/restaurant/tables').success(function (data) {
+    $http.get(server + '/tables').success(function (data) {
     	$scope.tables = data.tables;
     });
 
-    $http.get('http://localhost:3000/restaurant/foods').success(function (data) {
+    $http.get(server + '/foods').success(function (data) {
     	$scope.foods = data.foods;
     });    
 }]);
@@ -28,7 +29,9 @@ app.controller('TableCtrl', ['tableFactory','$scope','$stateParams',function (ta
 
     var table_id = $stateParams.table_id;
 
-    console.log($scope.foods);
+    if (table_id.length == 0) {
+    	location.href = '/';
+    }
     
     tableFactory.getTable(table_id).success(function (table) {
     	$scope.table = table;
@@ -45,52 +48,62 @@ app.controller('TableCtrl', ['tableFactory','$scope','$stateParams',function (ta
 }]);
 
 app.factory('tableFactory', ['$http','$q', function ($http,$q) {
+    var server = 'http://localhost:3000/restaurant';
+	var table = [];
+	var tempTable = [];
+	var tabs = [];
+
+	var getFood = function (food) {
+		$http.get(server + '/foods/' + food.foods).success(function(data){
+			food.foods = data.food;
+			tempTable.total += food.foods.cents;
+		});
+	};
+
+	var getTabitems = function(tabitems) {
+		var items = [];
+
+		angular.forEach(tabitems, function (tabitem) {
+			items.push($http.get( server + '/tabitems/' + tabitem));
+		});
+
+		$q.all(items).then(function (results) {
+			var tabitems = [];
+
+    		angular.forEach(results, function (result) {
+    			var food = result.data.tabitem;
+				tabitems.push(food);
+				getFood(food);
+    		});
+
+    		table = tempTable;
+    		table.tabs.tabitems = tabitems;
+		});
+	};
+
+	var getTabs = function () {
+    	$http.get(server + '/tabs/' + tabs).success( function (data) {
+    		tempTable.tabs = data.tab;
+    		getTabitems(data.tab.tabitems);
+    	}).error( function (error) {
+    		table = tempTable;
+    	});
+	};
 
 	var tableFactory = {
-
 		getTable: function (table_id) {
-		    return $http.get('http://localhost:3000/restaurant/tables/' + table_id).success(function (data) {
-		    	var table = [];
-		    	var tempTable = data.table;
-		    	var tabs = tempTable.tabs;
+		    return $http.get(server + '/tables/' + table_id).success(function (data) {
+		    	table = [];
+		    	tempTable = data.table;
+		    	tabs = tempTable.tabs;
 		    	tempTable.total = 0;
 
-		    	$http.get('http://localhost:3000/restaurant/tabs/' + tabs).success( function (data) {
-		    		tempTable.tabs = data.tab;
-		    		var items = [];
-
-		    		angular.forEach(data.tab.tabitems, function (tabitem) {
-						items.push($http.get('http://localhost:3000/restaurant/tabitems/' + tabitem));
-		    		});
-
-		    		$q.all(items).then(function (results) {
-		    			var tabitem = [];
-
-			    		angular.forEach(results, function (result) {
-							tabitem.push(result.data.tabitem);
-			    		});
-			    	
-			    		var foods = [];
-
-			    		angular.forEach(tabitem, function (food) {
-
-							$http.get('http://localhost:3000/restaurant/foods/' + food.foods).success(function(data){
-								food.foods = data.food;
-								tempTable.total += food.foods.cents;
-							})
-			    		});
-
-			    		table = tempTable;
-			    		table.tabs.tabitems = tabitem;
-		    		});
-		    	}).error( function (error) {
-		    		table = tempTable;
-		    	});
+		    	getTabs();
 
 		    	return table;
 		    });
 		}
-	}
+	};
 
 	return tableFactory;
 }]);

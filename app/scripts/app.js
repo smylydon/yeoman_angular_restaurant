@@ -3,13 +3,8 @@
 
   angular.module('yeomanAngularRestuarantApp', ['ui.router'])
   .config(function ($stateProvider, $urlRouterProvider) {
-    $urlRouterProvider.otherwise('/');
+    $urlRouterProvider.otherwise('/tables');
     $stateProvider
-      .state('home', {
-        url: '/',
-        templateUrl: 'views/main.html',
-        controller: 'MainCtrl'
-      })
       .state('tables', {
         url: '/tables',
         templateUrl: 'views/main.html',
